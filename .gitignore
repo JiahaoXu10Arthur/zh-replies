@@ -1,0 +1,6 @@
+docs/
+.claude/
+.codex/
+*.local.md
+PREFERENCES.md
+__pycache__/
