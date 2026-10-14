@@ -19,7 +19,7 @@ Coding agent 写中文的时候，常常先有一句英文，再逐字换成中�
 ```sh
 git clone https://github.com/JiahaoXu10Arthur/zh-replies.git && cd zh-replies
 python3 zh_replies.py install --with-hooks   # 规则写进 CLAUDE.md 和 AGENTS.md，三个 hook 写进 settings.json
-python3 zh_replies.py vocab                  # 收集你自己说过的话，以后不把它们当毛病
+python3 zh_replies.py vocab                  # 收集你常说的词，检查时跳过这些词
 ```
 
 新开一个 Claude Code session 就生效。`python3 zh_replies.py status` 看装没装齐，`python3 zh_replies.py disable` 全部卸掉。改过的每个文件旁边都留一份 backup。
