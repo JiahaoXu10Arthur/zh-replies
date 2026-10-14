@@ -22,7 +22,7 @@ python3 zh_replies.py install --with-hooks   # 规则写进 CLAUDE.md 和 AGENTS
 python3 zh_replies.py vocab                  # 收集你常说的词，检查时跳过这些词
 ```
 
-新开一个 Claude Code session 就生效。`python3 zh_replies.py status` 看装没装齐，`python3 zh_replies.py disable` 全部卸掉。改过的每个文件旁边都留一份 backup。
+新开一个 Claude Code session 就生效。`python3 zh_replies.py status` 查看安装情况，`python3 zh_replies.py disable` 卸载全部内容。改过的每个文件旁边都留一份 backup。
 
 ## 六种毛病
 
@@ -76,7 +76,7 @@ printf '%s\n' '等 CI 绿了再 merge。' | python3 zh_lint.py
 | 命令 | 作用 |
 |---|---|
 | `install` | 把 `rules/core.md` 写进 `~/.claude/CLAUDE.md` 和 `~/.codex/AGENTS.md`；加 `--with-hooks` 同时装三个 hook；`--agent claude\|codex` 只装一个；`--personal FILE` 附上你自己的偏好 |
-| `status` | 装在哪、装没装齐、hook 在不在 |
+| `status` | 显示安装位置、安装是否完整、hook 是否已经装上 |
 | `disable` | 移除规则 block 和三个 hook，个人文件和别人的 hook 不动 |
 | `vocab` | 收集你自己说过的话 |
 | `reply --check` | 独立的问答入口：先生成，再开一个没有 tool 的 Claude session 检查，检查通过才显示 |
@@ -127,7 +127,7 @@ printf '%s\n' '请简短解释当前项目的 README。' | python3 zh_replies.py
 
 ## 成本与隐私
 
-规则 block 约 980 tokens，每个 session 都带着。install、status、disable、vocab 不联网。hook 调 haiku 走你自己的 Claude Code 登录。不记录对话，不上传 telemetry；三份记录和 backup 只在本机。含个人内容的 CLAUDE.md 和 backup 不要加进 git。
+规则 block 大约 980 tokens，每个 session 都会带上这部分内容。install、status、disable、vocab 这四个命令都不联网。hook 调用 haiku 时用的是你自己的 Claude Code 账号。这个工具不记录对话，也不上传任何 telemetry。三份记录文件和 backup 都只保存在本机。CLAUDE.md 和 backup 里有个人内容，请不要把它们加进 git。
 
 ## 开发
 
