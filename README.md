@@ -8,7 +8,7 @@ Coding agent 写中文时，先有英文再逐字换成中文：「等 CI 绿了
 |---|---|
 | 等 CI 绿了再 merge。 | 等 CI 通过了再 merge。 |
 | 关键两处我自己核过。 | 关键两处我自己核对过。 |
-| sync-manager 变成纯派发器。 | sync-manager 变成纯 dispatcher。 |
+| 脚本退出码是 0 就算通过。 | 脚本 exit code 是 0 就算通过。 |
 | 两份都折进去了。 | 两份都写进去了。 |
 | 这份 sample 你接受吗？ | 你觉得这份 sample 可以吗？ |
 
@@ -19,7 +19,7 @@ Coding agent 写中文时，先有英文再逐字换成中文：「等 CI 绿了
 ```sh
 git clone https://github.com/JiahaoXu10Arthur/zh-replies.git && cd zh-replies
 python3 zh_replies.py install --with-hooks   # 规则写进 CLAUDE.md / AGENTS.md，三个 hook 写进 settings.json
-python3 zh_replies.py vocab                  # 收集你自己说过的话，这些词不报
+python3 zh_replies.py vocab                  # 收集你自己说过的话，以后不把它们当毛病
 ```
 
 新开一个 Claude Code session 就生效。`python3 zh_replies.py status` 看装没装齐，`python3 zh_replies.py disable` 全部卸掉。改的每个文件旁边都留 backup。
@@ -51,7 +51,7 @@ Hook 只有 Claude Code 有。Codex 只拿到 `AGENTS.md` 里的规则。
 
 ## 怎么检查
 
-**regex，`zh_lint.py`。** 一张词表，三档：问题（按规则算错，exit code 1）、提示（不如中文说法自然）、正常用法（中文技术圈本来就这么说的词，不报）。每一条都是使用者亲手判过的句子。引号和 inline code 里不扫。
+**regex，`zh_lint.py`。** 一张词表，三档：问题（按规则算错，exit code 1）、提示（不如中文说法自然）、正常用法（中文技术圈本来就这么说的词，不算毛病）。每一条都是使用者亲手判过的句子。引号和 inline code 里不扫。
 
 ```sh
 printf '%s\n' '等 CI 绿了再 merge。' | python3 zh_lint.py
@@ -59,7 +59,7 @@ printf '%s\n' '等 CI 绿了再 merge。' | python3 zh_lint.py
 
 **haiku 按机制判，`zh_check.py`。** 把回复和六种机制交给 haiku，返回句子、机制编号和改法。能抓词表里没有的词：拿两周里人工标出的 26 句试，一个例子不给、只给六条机制定义时抓到 19 句，带例子抓到 21 句，6 句干净样本零误报。走本机 Claude Code 登录，每次 1 到 8 秒，不到 0.001 美元。
 
-**你自己的词不报，`zh_vocab.py`。** 从本机 transcript 收集你亲手发过的短消息。haiku 报出来的词，你在至少两条消息里用过的就不算。只影响 haiku 的发现，不影响词表。
+**你自己说过的话不算毛病，`zh_vocab.py`。** 从本机 transcript 收集你亲手发过的短消息。haiku 报出来的词，你在至少两条消息里用过的就不算。只影响 haiku 的发现，不影响词表。
 
 ## 记录
 
