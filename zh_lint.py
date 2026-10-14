@@ -37,7 +37,7 @@ REPLACE = [
     (r'提交(?= ?进 ?git)', 'commit'), (r'未提交', '没 commit'), (r'退出码', 'exit code'), (r'烟雾测试|冒烟测试', 'smoke test'),
     (r'票(?= ?\d)', 'ticket'), (r'跑完', '运行完'), (r'跑通', '通过'), (r'全绿', '全部通过'), (r'(?P<ci>CI[^\n，。]{0,6}?)绿了', r'\g<ci>通过了'),
     (r'抛出(?=[^\n。]{0,12}(?:错误|异常|`|Error|Exception))', '报'), (r'守卫', 'guard'), (r'核过', '核对过'), (r'核完', '核对完'),
-    (r'核上的', '核对上的'), (r'我没接的', '我没接受的'), (r'不推(?=[，。；])', '不推导'), (r'尺子', '标准'), (r'派发器', 'dispatcher'),
+    (r'核上的', '核对上的'), (r'我没接的', '我没接受的'), (r'不推(?=[，。；])', '不 push'), (r'尺子', '标准'), (r'派发器', 'dispatcher'),
 ]
 REPLACE_RX = re.compile('|'.join('(?P<r%d>%s)' % (i, p) for i, (p, _) in enumerate(REPLACE)))
 CJK = re.compile(r'[\u4e00-\u9fff]')

@@ -1,6 +1,6 @@
 # zh-replies
 
-让 Claude Code 和 Codex 写出自然的中文回复。
+让 Claude Code 写出自然的中文回复。
 
 Coding agent 写中文的时候，经常先想好一句英文，再逐字翻成中文，于是出现「等 CI 绿了再 merge」「我自己核过」「烟雾测试完成」这样的句子。这个项目把这类问题分成六种，用规则、regex、haiku 和三个 Claude Code hook 来检查。检查分别发生在模型开始写之前、文字显示之前和回复结束之后。
 
@@ -12,54 +12,54 @@ Coding agent 写中文的时候，经常先想好一句英文，再逐字翻成�
 | 两份都折进去了。 | 两份都写进去了。 |
 | 这份 sample 你接受吗？ | 你觉得这份 sample 可以吗？ |
 
-## 快速开始
+## Quick start
 
 需要 Python 3.11 以上，并且已经登录 Claude Code。不需要安装任何 package。
 
 ```sh
 git clone https://github.com/JiahaoXu10Arthur/zh-replies.git && cd zh-replies
-python3 zh_replies.py install --with-hooks   # 规则写进 CLAUDE.md 和 AGENTS.md，三个 hook 写进 settings.json
-python3 zh_replies.py vocab                  # 收集你常说的词，检查时跳过这些词
+python3 zh_replies.py install --with-hooks   # 规则写进 CLAUDE.md，三个 hook 写进 settings.json
+python3 zh_replies.py vocab                  # 收集用户常说的词，检查时跳过这些词
 ```
 
 新开一个 Claude Code session 就生效。`python3 zh_replies.py status` 查看安装情况，`python3 zh_replies.py disable` 卸载全部内容。改过的每个文件旁边都留一份 backup。
 
-## 六种问题
+## 工作方式
 
-规则、judge 和 haiku 用的是同一份说明：[rules/mechanisms.md](rules/mechanisms.md)。每一条是一种问题，后面的例子帮助你识别它。
-
-| # | 问题 | 例子 | 应该写成 |
-|---|---|---|---|
-| 1 | 英文动词直译 | 抛出 RecursionError、跑完、折回 spec、还挂着等你定 | 报错、运行完、写回、还没定 |
-| 2 | 两字动词缩成一个字 | 核过、没接的、不推、写完跑 | 核对过、没接受的、不推导 |
-| 3 | 给新概念造中文名 | 烟雾测试、两个面、票 00、退出码 | smoke test、两个页面、ticket 00、exit code |
-| 4 | 用颜色或比喻代替结果 | CI 绿了、守卫、没有牙 | 通过、guard、不会拦截 |
-| 5 | 英文语序和英文介词 | CI 结果目前不是 dev 的合并条件 | 现在 merge 进 dev 不看 CI 结果 |
-| 6 | 催答复、下命令的口气 | 你认不认、认了我再……、写吧。 | 你觉得可以吗、你看有要改的地方吗 |
-
-以下情况不算问题：技术名词和动词保留英文，比如 deploy、merge、ticket；中文里没有现成说法的词，直接用英文；用户自己用过的词；引号里转述别人的原话；code 和链接。
-
-## 三个 hook 分别在什么时候运行
+三个 hook 在不同的时机运行：
 
 | 时机 | Hook | 做什么 |
 |---|---|---|
-| 你发消息的时候 | `UserPromptSubmit` | 把六种问题的说明附在你的消息后面，模型写回复的时候能看到规则；上一条回复查到的问题也一起附上 |
-| 文字显示之前 | `MessageDisplay` | 先做 regex 的一对一替换，这一步很快；如果这一批文字不长，再让 haiku 改写有问题的句子，这样你第一眼看到的就是改过的版本 |
-| 回复结束之后 | `Stop` | 用 regex 和 haiku 检查最后一条回复，把「原句 → 改法」列出来给你看，并写进记录。模型不需要重写 |
+| 用户发消息时 | `UserPromptSubmit` | 把六种问题的说明附在消息后面，模型写回复时能看到规则。上一条回复查到的问题也一起附上 |
+| 文字显示之前 | `MessageDisplay` | 先做 regex 的一对一替换。一批文字不超过 300 个汉字时，再由 haiku 改写有问题的句子。屏幕上显示的已经是改过的文字 |
+| 回复结束之后 | `Stop` | 用 regex 和 haiku 检查最后一条回复，列出「原句 → 改法」，并写进记录。模型不需要重写 |
 
-Hook 只在 Claude Code 里有。Codex 只能用到 `AGENTS.md` 里的规则。
+检查有三种：
 
-## 三种检查
-
-**regex 查词表（`zh_lint.py`）。** 词表分三档：问题（按规则算错，exit code 为 1）、提示（有更自然的中文说法）、正常用法（中文技术圈本来就这么说，不算问题）。词表里的每一条都是我在真实回复里标出来的句子。引号和 inline code 里的内容不检查。
+**regex 查词表（`zh_lint.py`）。** 词表分三档：问题（按规则算错，exit code 为 1）、提示（有更自然的中文说法）、正常用法（中文技术圈本来就这么说，不算问题）。词表里的每一条都来自真实回复里标出的句子。引号和 inline code 里的内容不检查。
 
 ```sh
 printf '%s\n' '等 CI 绿了再 merge。' | python3 zh_lint.py
 ```
 
-**haiku 按六种问题检查（`zh_check.py`）。** 把回复和六种问题的说明一起交给 haiku，它返回有问题的句子、问题编号和改法。词表里没有的词它也能查出来。我用两周里人工标出的 26 句试过：只给六种问题的定义时，查出 19 句；加上例子后，查出 21 句；6 句没问题的句子没有一句误报。调用用的是你本机的 Claude Code 账号，每次 1 到 8 秒，费用不到 0.001 美元。
+**haiku 按六种问题检查（`zh_check.py`）。** 把回复和六种问题的说明一起交给 haiku，它返回有问题的句子、问题编号和改法。词表里没有的词它也能查出来。用两周里人工标出的 26 句试过：只给六种问题的定义时，查出 19 句；加上例子后，查出 21 句；6 句没问题的句子没有一句误报。调用用的是本机的 Claude Code 账号，每次 1 到 8 秒，费用不到 0.001 美元。
 
-**你自己常用的词不算问题（`zh_vocab.py`）。** 从本机的 transcript 里收集你自己发过的短消息。haiku 查出来的词，只要你在至少两条消息里用过，就不算问题。词表里的词不受影响，照常报告。
+**用户自己常用的词不算问题（`zh_vocab.py`）。** 从本机的 transcript 里收集用户发过的短消息。haiku 查出来的词，只要用户在至少两条消息里用过，就不算问题。词表里的词不受影响，照常报告。
+
+## 六种问题
+
+完整说明在 [rules/mechanisms.md](rules/mechanisms.md)，规则和 haiku 检查用的都是这份文件。每一条是一种问题，后面的例子帮助识别它。
+
+| # | 问题 | 例子 | 应该写成 |
+|---|---|---|---|
+| 1 | 英文动词直译 | 抛出 RecursionError、跑完、折回 spec、不推 | 报错、运行完、写回、不 push |
+| 2 | 两字动词缩成一个字 | 核过、没接的、写完跑 | 核对过、没接受的、写完运行 |
+| 3 | 英文专有名词直译、给新概念造中文名 | 烟雾测试、退出码、票 00 | smoke test、exit code、ticket 00 |
+| 4 | 用颜色或比喻代替结果 | CI 绿了、守卫、没有牙 | 通过、guard、不会拦截 |
+| 5 | 英文语序、英文介词、不必要的转折 | CI 结果目前不是 dev 的合并条件；例子只是帮助认出来，不是词表 | 现在 merge 进 dev 不看 CI 结果；例子帮助认出机制 |
+| 6 | 催答复、下命令的口气 | 你认不认、认了我再……、写吧。 | 你觉得可以吗、你看有要改的地方吗 |
+
+以下情况不算问题：技术名词和动词保留英文，比如 deploy、merge、ticket；中文里没有现成说法的词，直接用英文；用户自己用过的词；引号里转述别人的原话；code 和链接。
 
 ## 记录
 
@@ -67,7 +67,7 @@ printf '%s\n' '等 CI 绿了再 merge。' | python3 zh_lint.py
 |---|---|
 | `~/.claude/zh-replies/display-log.jsonl` | 显示时的每一次改动：改前的句子、改后的句子、由 regex 还是 haiku 改的、属于哪种问题 |
 | `~/.claude/zh-replies/stop-log.jsonl` | 每条回复查到的问题：原句、改法、由 regex 还是 haiku 查到 |
-| `~/.claude/zh-replies/user-vocab.json` | 你自己常用的词 |
+| `~/.claude/zh-replies/user-vocab.json` | 用户自己常用的词 |
 
 显示时的改动只影响屏幕上的文字，transcript 里保留原文。改前和改后的句子都有记录，之后可以评估改得对不对。
 
@@ -75,16 +75,16 @@ printf '%s\n' '等 CI 绿了再 merge。' | python3 zh_lint.py
 
 | 命令 | 作用 |
 |---|---|
-| `install` | 把 `rules/core.md` 写进 `~/.claude/CLAUDE.md` 和 `~/.codex/AGENTS.md`；加 `--with-hooks` 同时安装三个 hook；`--agent claude\|codex` 只装一个；`--personal FILE` 附加你自己的偏好文件 |
+| `install` | 把 `rules/core.md` 写进 `~/.claude/CLAUDE.md`；加 `--with-hooks` 同时安装三个 hook；`--personal FILE` 附加个人偏好文件 |
 | `status` | 显示安装位置、安装是否完整、hook 是否已经装上 |
 | `disable` | 移除规则 block 和三个 hook，不动个人偏好文件和其他 hook |
-| `vocab` | 收集你自己常用的词 |
+| `vocab` | 收集用户自己常用的词 |
 | `reply --check` | 单独的问答命令：先生成回复，再开一个没有 tool 的 Claude session 做检查，检查通过才显示 |
 
 <details>
 <summary>install 的细节</summary>
 
-install 把规则写成一个带标记的 block，文件里的其他内容原样保留，写入之前先保存一份 `.CLAUDE.md.zh-replies-backup-*`。再运行一次 install 就是更新。如果 block 被手动改过、标记损坏，或者目标文件是 symlink，install 会拒绝写入，并提示从 backup 恢复。`--claude-dir` 和 `--codex-dir` 可以指定其他 profile，默认读取 `CLAUDE_CONFIG_DIR` 和 `CODEX_HOME`。Codex 的 `AGENTS.md` 超过 32768 bytes 时会拒绝写入；如果 Codex 设置了 global override，`AGENTS.md` 会被覆盖，status 会提醒你。
+install 把规则写成一个带标记的 block，文件里的其他内容原样保留，写入之前先保存一份 `.CLAUDE.md.zh-replies-backup-*`。再运行一次 install 就是更新。如果 block 被手动改过、标记损坏，或者目标文件是 symlink，install 会拒绝写入，并提示从 backup 恢复。`--claude-dir` 可以指定其他 profile，默认读取 `CLAUDE_CONFIG_DIR`。`--agent codex` 会把同一份规则写进 `~/.codex/AGENTS.md`，但 Codex 没有 hook，只能用到规则。
 
 个人偏好是一个 UTF-8 文本文件，里面只写表达上的偏好，例如「技术动词保留英文」。用 `install --personal FILE` 安装；改了文件之后再运行一次 `install` 就会更新；`install --without-personal` 会移除它。
 
@@ -118,15 +118,15 @@ printf '%s\n' '请简短解释当前项目的 README。' | python3 zh_replies.py
 
 ## 限制
 
-- 只靠 context 里的规则挡不住所有问题，三个 hook 是主要的保障，而 hook 只在 Claude Code 里有。
+- 只靠 context 里的规则挡不住所有问题，三个 hook 是主要的保障。
 - haiku 每一批需要 5 到 8 秒，长回复显示时会有等待；超过 300 个汉字的批次只做 regex 替换。
 - 显示时的改动只改屏幕上的文字，模型看到的还是原文，要到下一轮才知道上一条错在哪里。
 - 不检查 thinking 里的中文。
-- 词表可以自定。现在的词表按照我自己的习惯整理，比如「守卫」换成 guard；要改的话，编辑 `zh_lint.py` 里的 `RULES` 和 `REPLACE`。
+- 词表可以自定。现在的词表按照一个人的习惯整理，比如「守卫」换成 guard；要改的话，编辑 `zh_lint.py` 里的 `RULES` 和 `REPLACE`。
 
 ## 成本与隐私
 
-规则 block 大约 980 tokens，每个 session 都会带上这部分内容。install、status、disable、vocab 这四个命令都不联网。hook 调用 haiku 时用的是你自己的 Claude Code 账号。这个工具不记录对话，也不上传任何 telemetry。三份记录文件和 backup 都只保存在本机。CLAUDE.md 和 backup 里有个人内容，请不要把它们加进 git。
+规则 block 大约 980 tokens，每个 session 都会带上这部分内容。install、status、disable、vocab 这四个命令都不联网。hook 调用 haiku 时用的是本机的 Claude Code 账号。这个工具不记录对话，也不上传任何 telemetry。三份记录文件和 backup 都只保存在本机。CLAUDE.md 和 backup 里有个人内容，请不要把它们加进 git。
 
 ## 运行测试
 
