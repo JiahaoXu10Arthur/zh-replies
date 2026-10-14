@@ -87,6 +87,9 @@ class LintTests(unittest.TestCase):
         hits = zh_lint.lint('migration 都跑完了，上面第三条说的那个索引进行验证。')
         self.assertEqual({h['tier'] for h in hits}, {'提示'})
         self.assertEqual(rules('migration 都跑完了'), ['跑完跑通'])
+        self.assertEqual(rules('例子只是帮助认出来，不是词表。', '提示'), ['不是而是句式'])
+        self.assertEqual(rules('这不是 bug，而是设计如此。', '提示'), ['不是而是句式'])
+        self.assertEqual(rules('这个文件不是 README。'), [])
 
     def test_allowed_usage_is_silent(self):
         for text in ['改动落地了', '跑一遍测试', '第二个球员那条存不进去', '转述：他说「必须选一个」的原因是表单收不到 Enter', '地基档案']:
