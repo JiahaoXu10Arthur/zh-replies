@@ -31,7 +31,7 @@ python3 zh_replies.py vocab                  # 收集用户常说的词，检查
 | 时机 | Hook | 做什么 |
 |---|---|---|
 | 用户发消息时 | `UserPromptSubmit` | 把六种问题的说明附在消息后面，模型写回复时能看到规则。上一条回复查到的问题也一起附上 |
-| 文字显示之前 | `MessageDisplay` | 先做 regex 的一对一替换。一批文字不超过 300 个汉字时，再由 haiku 改写有问题的句子。屏幕上显示的已经是改过的文字 |
+| 文字显示之前 | `MessageDisplay` | 先做 regex 的一对一替换。一次显示的文字不超过 300 个汉字时，再由 haiku 改写有问题的句子。屏幕上显示的已经是改过的文字 |
 | 回复结束之后 | `Stop` | 用 regex 和 haiku 检查最后一条回复，列出「原句 → 改法」，并写进记录。模型不需要重写 |
 
 检查有三种：
@@ -100,7 +100,7 @@ install 把规则写成一个带标记的 block，文件里的其他内容原样
 ```
 
 - `hooks/zh_prompt_submit.py`（UserPromptSubmit）：程序自动发出的消息不附加规则。
-- `hooks/zh_display.py`（MessageDisplay）：只改完整的行，code block 和引号里的内容不改；一批文字超过 300 个汉字时只做 regex 替换；haiku 超时就显示原文。设置 `ZH_DISPLAY_NO_MODEL=1` 可以只做 regex 替换。
+- `hooks/zh_display.py`（MessageDisplay）：只改完整的行，code block 和引号里的内容不改；一次显示的文字超过 300 个汉字时只做 regex 替换；haiku 超时就显示原文。设置 `ZH_DISPLAY_NO_MODEL=1` 可以只做 regex 替换。
 - `hooks/zh_lint_stop.py`（Stop）：只检查这一轮的最后一条回复；由 task-notification 这类程序消息触发的轮次只运行 regex。设置 `ZH_LINT_NO_MODEL=1` 可以跳过 haiku。
 
 </details>
@@ -118,15 +118,15 @@ printf '%s\n' '请简短解释当前项目的 README。' | python3 zh_replies.py
 
 ## 限制
 
-- 只靠 context 里的规则挡不住所有问题，三个 hook 是主要的保障。
-- haiku 每一批需要 5 到 8 秒，长回复显示时会有等待；超过 300 个汉字的批次只做 regex 替换。
+- CLAUDE.md 里的规则只能减少问题，不能完全避免。主要靠三个 hook 检查。
+- haiku 每次调用需要 5 到 8 秒，长回复显示时会有等待；一次显示的文字超过 300 个汉字时只做 regex 替换。
 - 显示时的改动只改屏幕上的文字，模型看到的还是原文，要到下一轮才知道上一条错在哪里。
 - 不检查 thinking 里的中文。
-- 词表可以自定。现在的词表按照一个人的习惯整理，比如「守卫」换成 guard；要改的话，编辑 `zh_lint.py` 里的 `RULES` 和 `REPLACE`。
+- 词表可以自定，编辑 `zh_lint.py` 里的 `RULES` 和 `REPLACE`。
 
 ## 成本与隐私
 
-规则 block 大约 980 tokens，每个 session 都会带上这部分内容。install、status、disable、vocab 这四个命令都不联网。hook 调用 haiku 时用的是本机的 Claude Code 账号。这个工具不记录对话，也不上传任何 telemetry。三份记录文件和 backup 都只保存在本机。CLAUDE.md 和 backup 里有个人内容，请不要把它们加进 git。
+规则 block 大约 980 tokens，每个 session 都会带上这部分内容。install、status、disable、vocab 这四个命令都不联网。hook 调用 haiku 时用的是本机的 Claude Code 账号。这个工具不记录对话，也不上传任何 telemetry。三份记录文件和 backup 都只保存在本机。
 
 ## 运行测试
 
