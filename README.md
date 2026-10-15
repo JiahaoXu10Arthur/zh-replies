@@ -18,7 +18,7 @@ Coding agent 写中文的时候，经常先想好一句英文，再逐字翻成�
 |---|---|---|
 | 26 句 | 21 句 | 0 句 |
 
-只把规则写进 CLAUDE.md 挡不住这些问题。「不拦」「尺子」「核过」「票 00」「烟雾测试」这些词，都是规则已经在 CLAUDE.md 里的时候写出来的。所以检查靠三个 hook，规则只是第一道。
+只把规则写进 CLAUDE.md 不能防止这些问题。「不拦」「尺子」「核过」「票 00」「烟雾测试」这些词，都是 CLAUDE.md 里已经写了规则之后写出来的。所以检查靠三个 hook，规则只是第一道。
 
 改写只换查出来的那几个字，模型不重写整段。整段重写容易丢事实、丢条件；只换几个字，行数、Markdown 结构和没查到问题的句子都原样不动。改前改后的句子都有记录，可以回头核对。
 
@@ -99,12 +99,12 @@ printf '%s\n' '等 CI 绿了再 merge。' | python3 zh_lint.py
 | `disable` | 移除规则 block 和三个 hook，不动个人偏好文件和其他 hook |
 | `vocab` | 收集用户自己常用的词 |
 | `rules` | 列出所有检查规则的名字。要关掉某一条，把名字写进 `~/.claude/zh-replies/config.json` 的 `disabled_rules` |
-| `reply --check` | 单独的问答命令：先生成回复，再开一个没有 tool 的 Claude session 做检查，检查通过才显示 |
+| `reply --check` | 单独的命令：先生成回复，再开一个没有 tool 的 Claude session 做检查，检查通过才显示 |
 
 <details>
 <summary>install 的细节</summary>
 
-install 把规则写成一个带标记的 block，文件里的其他内容原样保留，写入之前先保存一份 `.CLAUDE.md.zh-replies-backup-*`。再运行一次 install 就是更新。如果 block 被手动改过、标记损坏，或者目标文件是 symlink，install 会拒绝写入，并提示从 backup 恢复。`--claude-dir` 可以指定其他 profile，默认读取 `CLAUDE_CONFIG_DIR`。`--agent codex` 会把同一份规则写进 `~/.codex/AGENTS.md`，但 Codex 没有 hook，只能用到规则。
+install 把规则写成一个带标记的 block，文件里的其他内容原样保留，写入之前先保存一份 `.CLAUDE.md.zh-replies-backup-*`。再运行一次 install 就是更新。如果 block 被手动改过、标记损坏，或者目标文件是 symlink，install 会拒绝写入，并提示从 backup 恢复。`--claude-dir` 可以指定其他 profile，默认读取 `CLAUDE_CONFIG_DIR`。`--agent codex` 会把同一份规则写进 `~/.codex/AGENTS.md`，但 Codex 没有 hook，只有规则会生效。
 
 个人偏好是一个 UTF-8 文本文件，里面只写表达上的偏好，例如「技术动词保留英文」。用 `install --personal FILE` 安装；改了文件之后再运行一次 `install` 就会更新；`install --without-personal` 会移除它。
 
@@ -121,7 +121,7 @@ install 把规则写成一个带标记的 block，文件里的其他内容原样
 
 - `hooks/zh_prompt_submit.py`（UserPromptSubmit）：程序自动发出的消息不附加规则。
 - `hooks/zh_display.py`（MessageDisplay）：只改完整的行，code block 和引号里的内容不改；一次显示的文字超过 300 个汉字时只做 regex 替换；haiku 超时就显示原文。设置 `ZH_DISPLAY_NO_MODEL=1` 可以只做 regex 替换。
-- `hooks/zh_lint_stop.py`（Stop）：只检查这一轮的最后一条回复；由 task-notification 这类程序消息触发的轮次只运行 regex。设置 `ZH_LINT_NO_MODEL=1` 可以跳过 haiku。
+- `hooks/zh_lint_stop.py`（Stop）：只检查这一轮的最后一条回复；由 task-notification 这类程序消息触发的那一轮只运行 regex。设置 `ZH_LINT_NO_MODEL=1` 可以跳过 haiku。
 
 </details>
 
