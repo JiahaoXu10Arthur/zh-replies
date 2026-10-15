@@ -69,6 +69,16 @@ class StopHookTests(unittest.TestCase):
         self.assertEqual(out['systemMessage'].count('「折进去」'), 1)
         self.assertIn('「硬理由」→ 站得住的理由', out['systemMessage'])
 
+    def test_plugin_mode_also_injects_core_rules(self):
+        payload = json.dumps({'session_id': 'p', 'prompt': '问'})
+        plain = subprocess.run([sys.executable, str(SUBMIT)], input=payload, capture_output=True, text=True, env=dict(os.environ, HOME=HOME, CLAUDE_PLUGIN_ROOT=''))
+        plugin = subprocess.run([sys.executable, str(SUBMIT)], input=payload, capture_output=True, text=True, env=dict(os.environ, HOME=HOME, CLAUDE_PLUGIN_ROOT='/x'))
+        plain_ctx = json.loads(plain.stdout)['hookSpecificOutput']['additionalContext']
+        plugin_ctx = json.loads(plugin.stdout)['hookSpecificOutput']['additionalContext']
+        self.assertNotIn('先保留原意', plain_ctx)
+        self.assertIn('先保留原意', plugin_ctx)
+        self.assertIn('七种问题', plugin_ctx)
+
     def test_unsure_items_are_logged_but_not_shown(self):
         path = transcript([user('问'), assistant('这个方案站得住。')])
         with tempfile.TemporaryDirectory() as directory:
