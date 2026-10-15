@@ -6,6 +6,7 @@ stdin 收 Claude Code 的 hook JSON（含 transcript_path、stop_hook_active）�
 不让模型改写。命中的句子以「原句 → 改法」成对列在 systemMessage 里给用户看，并写进 ~/.claude/zh-replies/stop-log.jsonl；
 下一条用户消息发出时，zh_prompt_submit.py 把这份记录附给模型，模型在写下一条之前知道上一条错在哪。
 只检查这一轮最后一条 assistant 消息，中途的过渡句不查。haiku 调用失败时只在 systemMessage 里说一句。
+haiku 拿不准的句子不显示，只写进 stop-log 的 unsure 字段，留给以后评估。
 设环境变量 ZH_LINT_NO_MODEL=1 可以跳过 haiku。
 """
 import datetime
@@ -51,10 +52,12 @@ def main():
     vocab = zh_vocab.load()
     hits = zh_lint.lint(reply)
     notes = []
+    unsure = []
     if human and reply.strip() and not os.environ.get('ZH_LINT_NO_MODEL'):
         try:
             seen = {h['match'] for h in hits}
-            hits += [h for h in zh_check.check(reply, vocab=vocab) if h['match'] not in seen]
+            model_hits, unsure = zh_check.check_all(reply, vocab=vocab)
+            hits += [h for h in model_hits if h['match'] not in seen]
         except (RuntimeError, OSError, ValueError, KeyError, subprocess.TimeoutExpired) as error:
             notes.append('zh-check 没跑成：' + str(error)[:120])
     problems = [h for h in hits if h['tier'] == '问题']
@@ -64,11 +67,12 @@ def main():
         notes.append('zh-lint 提示：' + '；'.join(f"{h['rule']}「{h['match']}」" for h in hints[:6]))
     if problems:
         notes.append('zh-lint：\n' + '\n'.join(f"  「{h['match']}」→ {h['hint']}" for h in problems[:8]))
-    if hits:
+    if hits or unsure:
         LOG.parent.mkdir(parents=True, exist_ok=True)
         with LOG.open('a', encoding='utf-8') as f:
             f.write(json.dumps({'ts': datetime.datetime.now().isoformat(timespec='seconds'), 'session_id': payload.get('session_id'), 'human': human,
-                                'reply': reply, 'hits': [{'source': 'haiku' if h['rule'].startswith('机制') else 'regex', **h} for h in hits]}, ensure_ascii=False) + '\n')
+                                'reply': reply, 'hits': [{'source': 'haiku' if h['rule'].startswith('机制') else 'regex', **h} for h in hits],
+                                'unsure': unsure}, ensure_ascii=False) + '\n')
     if notes:
         out['systemMessage'] = '\n'.join(notes)
     if out:

@@ -15,10 +15,10 @@ import zh_vocab
 MECHANISMS = ROOT / 'rules' / 'mechanisms.md'
 PROMPT = '''你是中文回复的审读。下面先给六种毛病的说明，再给一段 agent 写给用户的中文回复。
 逐句读回复，找出属于这六种毛病的句子。按机制判断，说明里的例子只是帮助认出来，没列出的写法同样要报。
-引号里转述别人的原话、code、链接、技术英文名词不报；引号里 agent 自己起的名字或自己的说法要报。拿不准的不报。
+引号里转述别人的原话、code、链接、技术英文名词不报；引号里 agent 自己起的名字或自己的说法要报。拿不准的不放进 hits，另外列在 unsure 里，格式一样。
 
-只输出 JSON，不加别的字：{"hits": [{"sentence": "原句", "mechanism": 1到6的数字, "match": "有问题的那几个字", "fix": "该怎么写"}]}
-没有问题就输出 {"hits": []}
+只输出 JSON，不加别的字：{"hits": [{"sentence": "原句", "mechanism": 1到6的数字, "match": "有问题的那几个字", "fix": "该怎么写"}], "unsure": [同样格式]}
+没有问题就输出 {"hits": [], "unsure": []}
 
 === 六种毛病 ===
 %s
@@ -39,10 +39,19 @@ def _call(prompt, timeout):
     return json.loads(result[start:end + 1])
 
 
+def _hit(h):
+    return {'tier': '问题', 'rule': '机制%s' % h['mechanism'], 'match': h['match'], 'sentence': h['sentence'], 'hint': h['fix']}
+
+
+def check_all(text, timeout=50, vocab=()):
+    """Return (hits, unsure): what haiku is sure about, and what it was unsure about. Unsure items are for later evaluation only."""
+    result = _call(PROMPT % (MECHANISMS.read_text(encoding='utf-8'), text), timeout)
+    hits = [_hit(h) for h in result['hits'] if not (vocab and zh_vocab.used(h['match'], vocab))]
+    return hits, [_hit(h) for h in result.get('unsure', [])]
+
+
 def check(text, timeout=50, vocab=()):
-    hits = _call(PROMPT % (MECHANISMS.read_text(encoding='utf-8'), text), timeout)['hits']
-    return [{'tier': '问题', 'rule': '机制%s' % h['mechanism'], 'match': h['match'], 'sentence': h['sentence'], 'hint': h['fix']}
-            for h in hits if not (vocab and zh_vocab.used(h['match'], vocab))]
+    return check_all(text, timeout, vocab)[0]
 
 
 REWRITE_PROMPT = '''你是中文回复的审读。下面先给六种毛病的说明，再给一段 agent 写给用户的中文回复。

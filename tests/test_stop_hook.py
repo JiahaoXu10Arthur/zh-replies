@@ -69,6 +69,15 @@ class StopHookTests(unittest.TestCase):
         self.assertEqual(out['systemMessage'].count('「折进去」'), 1)
         self.assertIn('「硬理由」→ 站得住的理由', out['systemMessage'])
 
+    def test_unsure_items_are_logged_but_not_shown(self):
+        path = transcript([user('问'), assistant('这个方案站得住。')])
+        with tempfile.TemporaryDirectory() as directory:
+            env = fake_claude(directory, {'hits': [], 'unsure': [{'sentence': '这个方案站得住。', 'mechanism': 1, 'match': '站得住', 'fix': '成立'}]})
+            code, out = run(path, env=env)
+        self.assertEqual((code, out), (0, {}))
+        entry = json.loads((Path(HOME) / '.claude' / 'zh-replies' / 'stop-log.jsonl').read_text().splitlines()[-1])
+        self.assertEqual((entry['hits'], entry['unsure'][0]['match']), ([], '站得住'))
+
     def test_model_failure_is_reported_not_blocking(self):
         path = transcript([user('问'), assistant('一切正常。')])
         with tempfile.TemporaryDirectory() as directory:
