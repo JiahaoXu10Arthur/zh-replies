@@ -1,4 +1,4 @@
-"""Claude Code UserPromptSubmit hook：把六种机制附在用户消息后面给模型看，让规则紧贴着生成。
+"""Claude Code UserPromptSubmit hook：把七种机制附在用户消息后面给模型看，让规则紧贴着生成。
 
 程序发的消息（task-notification 等）不附。输出 hookSpecificOutput.additionalContext。
 """
@@ -33,7 +33,7 @@ def main():
     if not prompt or prompt.startswith(AUTOMATED):
         return 0
     mechanisms = (ROOT / 'rules' / 'mechanisms.md').read_text(encoding='utf-8')
-    context = '回复用中文时，写完逐句对照下面六种毛病，有就当场改掉再发。\n' + mechanisms
+    context = '回复用中文时，写完逐句对照下面七种毛病，有就当场改掉再发。\n' + mechanisms
     last = last_findings(payload.get('session_id'))
     if last:
         context += '\n你上一条回复里查到的毛病，这次不要再犯：\n' + '\n'.join(f"- 「{h['match']}」→ {h['hint']}" for h in last[:8])
