@@ -176,6 +176,7 @@ def parser():
             group.add_argument('--without-personal', action='store_true')
             s.add_argument('--with-hooks', action='store_true', help='同时把三个 Claude Code hook 写进 settings.json')
     sub.add_parser('vocab', help='从本机 transcript 收集你自己发过的消息，检查时你用过的词不报')
+    sub.add_parser('rules', help='列出检查规则的名字；要关掉哪条，写进 ~/.claude/zh-replies/config.json 的 disabled_rules')
     s = sub.add_parser('reply', help='独立 Claude Code 问答；--check 才调用检查器')
     s.add_argument('--check', action='store_true')
     s.add_argument('--personal', type=Path)
@@ -190,6 +191,15 @@ def main():
         if args.action == 'vocab':
             import zh_vocab
             print('收了', zh_vocab.build(), '条你自己发的消息，写到', zh_vocab.VOCAB)
+            return 0
+        if args.action == 'rules':
+            import zh_lint
+            off = zh_lint.disabled_rules()
+            for tier, name, _, _ in zh_lint.RULES:
+                print(f"[{tier}] {name}" + ('  （已关）' if name in off else ''))
+            for n in range(1, 8):
+                print(f"[问题] 机制{n}" + ('  （已关）' if f'机制{n}' in off else ''))
+            print('关掉规则：在', zh_lint.CONFIG, '写 {"disabled_rules": ["规则名"]}')
             return 0
         if args.action == 'reply':
             from reply import run_reply, ReplyFailure

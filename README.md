@@ -86,6 +86,7 @@ printf '%s\n' '等 CI 绿了再 merge。' | python3 zh_lint.py
 | `status` | 显示安装位置、安装是否完整、hook 是否已经装上 |
 | `disable` | 移除规则 block 和三个 hook，不动个人偏好文件和其他 hook |
 | `vocab` | 收集用户自己常用的词 |
+| `rules` | 列出所有检查规则的名字。要关掉某一条，把名字写进 `~/.claude/zh-replies/config.json` 的 `disabled_rules` |
 | `reply --check` | 单独的问答命令：先生成回复，再开一个没有 tool 的 Claude session 做检查，检查通过才显示 |
 
 <details>

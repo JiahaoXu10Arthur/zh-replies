@@ -95,6 +95,22 @@ class LintTests(unittest.TestCase):
         for text in ['改动落地了', '跑一遍测试', '第二个球员那条存不进去', '转述：他说「必须选一个」的原因是表单收不到 Enter', '地基档案', '例子：\n```sh\necho 等 CI 绿了再 merge\n```\n']:
             self.assertEqual(zh_lint.lint(text), [], text)
 
+    def test_disabled_rule_is_skipped_by_lint_and_substitute(self):
+        import os, tempfile
+        home = tempfile.mkdtemp()
+        cfg = Path(home) / '.claude' / 'zh-replies'
+        cfg.mkdir(parents=True)
+        (cfg / 'config.json').write_text('{"disabled_rules": ["跑完跑通", "颜色指代结果"]}', encoding='utf-8')
+        saved, os.environ['HOME'] = os.environ.get('HOME'), home
+        saved_cfg, zh_lint.CONFIG = zh_lint.CONFIG, cfg / 'config.json'
+        try:
+            self.assertEqual(rules('migration 跑完了，等 CI 绿了再 merge，烟雾测试完成。'), ['技术名词该用英文'])
+            text, changes = zh_lint.substitute('migration 跑完了，等 CI 绿了再 merge，烟雾测试完成。')
+            self.assertEqual(text, 'migration 跑完了，等 CI 绿了再 merge，smoke test 完成。')
+        finally:
+            zh_lint.CONFIG = saved_cfg
+            os.environ['HOME'] = saved
+
     def test_hit_carries_line_sentence_and_hint(self):
         hit = zh_lint.lint('第一行。\n等 CI 绿了再 merge。')[0]
         self.assertEqual((hit['line'], hit['sentence']), (2, '等 CI 绿了再 merge。'))

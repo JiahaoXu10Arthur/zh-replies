@@ -11,6 +11,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
+import zh_lint
 import zh_vocab
 MECHANISMS = ROOT / 'rules' / 'mechanisms.md'
 PROMPT = '''你是中文回复的审读。下面先给七种毛病的说明，再给一段 agent 写给用户的中文回复。
@@ -46,7 +47,8 @@ def _hit(h):
 def check_all(text, timeout=50, vocab=()):
     """Return (hits, unsure): what haiku is sure about, and what it was unsure about. Unsure items are for later evaluation only."""
     result = _call(PROMPT % (MECHANISMS.read_text(encoding='utf-8'), text), timeout)
-    hits = [_hit(h) for h in result['hits'] if not (vocab and zh_vocab.used(h['match'], vocab))]
+    off = zh_lint.disabled_rules()
+    hits = [_hit(h) for h in result['hits'] if not (vocab and zh_vocab.used(h['match'], vocab)) and '机制%s' % h['mechanism'] not in off]
     return hits, [_hit(h) for h in result.get('unsure', [])]
 
 
@@ -76,9 +78,10 @@ def rewrite(text, timeout=20, vocab=()):
     if not isinstance(result.get('text'), str) or not isinstance(result.get('changes'), list):
         raise ValueError('rewrite schema')
     new, changes = text, []
+    off = zh_lint.disabled_rules()
     for change in result['changes']:
         src, dst = change.get('from', ''), change.get('to', '')
-        if not src or not dst or src not in new or (vocab and zh_vocab.used(src, vocab)):
+        if not src or not dst or src not in new or (vocab and zh_vocab.used(src, vocab)) or '机制%s' % change.get('mechanism') in off:
             continue
         at = new.index(src)
         before, after = new[at - 1:at], new[at + len(src):at + len(src) + 1]

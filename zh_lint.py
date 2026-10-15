@@ -7,6 +7,7 @@
 退出码：有「问题」档命中为 1，否则 0。
 
 三档：问题（按规则算错，应改写）、提示（不如中文说法自然，只提示）、正常用法（中文技术圈本来就这么说，不报，见 ALLOW）。
+关掉某条规则：在 ~/.claude/zh-replies/config.json 写 {"disabled_rules": ["规则名"]}，规则名见 `python3 zh_replies.py rules`；haiku 的机制也可以关，名字是「机制1」到「机制7」。
 """
 import json
 import re
@@ -46,9 +47,11 @@ CJK = re.compile(r'[\u4e00-\u9fff]')
 def substitute(text):
     """Apply the one-to-one replacements in one pass; return (new text, [(from, to)]). Quoted and inline-code spans are left alone."""
     quoted = [m.span() for m in QUOTED.finditer(text)]
+    off = disabled_rules()
+    off_rx = [rx for _, name, rx, _ in COMPILED if name in off]
     changes = []
     def swap(m):
-        if any(a < m.start() and m.end() <= b for a, b in quoted):
+        if any(a < m.start() and m.end() <= b for a, b in quoted) or any(rx.search(m.group(0)) for rx in off_rx):
             return m.group(0)
         index = int(m.lastgroup[1:])
         out = m.expand(REPLACE[index][1]) if '\\' in REPLACE[index][1] else REPLACE[index][1]
@@ -65,6 +68,14 @@ def substitute(text):
 
 ALLOW = ['落地', '跑（代码、脚本、测试）']
 COMPILED = [(tier, name, re.compile(pattern), hint) for tier, name, pattern, hint in RULES]
+CONFIG = Path.home() / '.claude' / 'zh-replies' / 'config.json'
+
+
+def disabled_rules():
+    """Rule names the user switched off in config.json; a missing file means none."""
+    if not CONFIG.exists():
+        return set()
+    return set(json.loads(CONFIG.read_text(encoding='utf-8')).get('disabled_rules', []))
 
 
 def context(text, start, end):
@@ -79,8 +90,11 @@ QUOTED = re.compile(r'「[^」\n]*」|“[^”\n]*”|```[\s\S]*?```|`[^`\n]*`')
 
 def lint(text):
     quoted = [m.span() for m in QUOTED.finditer(text)]
+    off = disabled_rules()
     hits = []
     for tier, name, rx, hint in COMPILED:
+        if name in off:
+            continue
         for m in rx.finditer(text):
             if any(a < m.start() and m.end() <= b for a, b in quoted):
                 continue
