@@ -74,7 +74,7 @@ def context(text, start, end):
     return text[left:right].strip()
 
 
-QUOTED = re.compile(r'「[^」\n]*」|“[^”\n]*”|`[^`\n]*`')
+QUOTED = re.compile(r'「[^」\n]*」|“[^”\n]*”|```[\s\S]*?```|`[^`\n]*`')
 
 
 def lint(text):

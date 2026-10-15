@@ -92,7 +92,7 @@ class LintTests(unittest.TestCase):
         self.assertEqual(rules('这个文件不是 README。'), [])
 
     def test_allowed_usage_is_silent(self):
-        for text in ['改动落地了', '跑一遍测试', '第二个球员那条存不进去', '转述：他说「必须选一个」的原因是表单收不到 Enter', '地基档案']:
+        for text in ['改动落地了', '跑一遍测试', '第二个球员那条存不进去', '转述：他说「必须选一个」的原因是表单收不到 Enter', '地基档案', '例子：\n```sh\necho 等 CI 绿了再 merge\n```\n']:
             self.assertEqual(zh_lint.lint(text), [], text)
 
     def test_hit_carries_line_sentence_and_hint(self):
