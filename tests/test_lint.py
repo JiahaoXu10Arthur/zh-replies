@@ -82,6 +82,7 @@ class LintTests(unittest.TestCase):
         self.assertEqual(rules('review-workflows 干净无在飞代码', '问题'), ['英文动词直译'])
         self.assertEqual(rules('用 A 还是 B，你定。先停在这里等你定，你定了我再改。', '问题'), ['英文动词直译'] * 3)
         self.assertEqual(rules('你定的规矩我照做，定金已经付了。'), [])
+        self.assertEqual(rules('M2 要收窄成只查动词。', '问题'), ['英文动词直译'])
         self.assertEqual(rules('没有 `require.main` 守卫，直接跑 `main()`', '问题'), ['AI 比喻词'])
         self.assertEqual(rules('这一步是对外的 —— 他收到了通知 —— 这种动作我该先问你。', '问题'), ['一句两个破折号'])
 
