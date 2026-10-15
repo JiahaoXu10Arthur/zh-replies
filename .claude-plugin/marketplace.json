@@ -1,0 +1,14 @@
+{
+  "name": "zh-replies",
+  "owner": {
+    "name": "Jiahao Xu"
+  },
+  "description": "zh-replies 的 marketplace，只有这一个 plugin。",
+  "plugins": [
+    {
+      "name": "zh-replies",
+      "source": ".",
+      "description": "让 Claude Code 写出自然的中文回复：七种问题，regex 和 haiku 检查，三个 hook。"
+    }
+  ]
+}

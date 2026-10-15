@@ -1,0 +1,11 @@
+{
+  "name": "zh-replies",
+  "version": "0.1.0",
+  "description": "让 Claude Code 写出自然的中文回复：七种问题，regex 和 haiku 检查，三个 hook。",
+  "author": {
+    "name": "Jiahao Xu"
+  },
+  "homepage": "https://github.com/JiahaoXu10Arthur/zh-replies",
+  "repository": "https://github.com/JiahaoXu10Arthur/zh-replies",
+  "license": "MIT"
+}

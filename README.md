@@ -22,6 +22,12 @@ python3 zh_replies.py install --with-hooks   # 规则写进 CLAUDE.md，三个 h
 python3 zh_replies.py vocab                  # 收集用户常说的词，检查时跳过这些词
 ```
 
+也可以不 clone，在 Claude Code 里用 plugin 命令安装，只装三个 hook，不改 CLAUDE.md：
+
+```
+/plugin install zh-replies --marketplace JiahaoXu10Arthur/zh-replies
+```
+
 新开一个 Claude Code session 就生效。`python3 zh_replies.py status` 查看安装情况，`python3 zh_replies.py disable` 卸载全部内容。改过的每个文件旁边都留一份 backup。
 
 ## 工作方式
