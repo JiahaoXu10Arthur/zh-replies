@@ -15,13 +15,13 @@ import zh_lint
 import zh_vocab
 MECHANISMS = ROOT / 'rules' / 'mechanisms.md'
 PROMPT = '''你是中文回复的审读。下面先给八种毛病的说明，再给一段 agent 写给用户的中文回复。
-逐句读回复，找出属于这七种毛病的句子。按机制判断，说明里的例子只是帮助认出来，没列出的写法同样要报。
+逐句读回复，找出属于这八种毛病的句子。按机制判断，说明里的例子只是帮助认出来，没列出的写法同样要报。
 引号里转述别人的原话、code、链接、技术英文名词不报；引号里 agent 自己起的名字或自己的说法要报。拿不准的不放进 hits，另外列在 unsure 里，格式一样。
 
 只输出 JSON，不加别的字：{"hits": [{"sentence": "原句", "mechanism": 1到8的数字, "match": "有问题的那几个字", "fix": "该怎么写"}], "unsure": [同样格式]}
 没有问题就输出 {"hits": [], "unsure": []}
 
-=== 七种毛病 ===
+=== 八种毛病 ===
 %s
 === 回复 ===
 %s'''
@@ -56,14 +56,14 @@ def check(text, timeout=50, vocab=()):
     return check_all(text, timeout, vocab)[0]
 
 
-REWRITE_PROMPT = '''你是中文回复的审读。下面先给七种毛病的说明，再给一段 agent 写给用户的中文回复。
-只改有这七种毛病的句子，改成中文日常说法；其余一个字不动。保留所有 code、链接、引号里的原话、英文技术名词、Markdown 符号、空行和换行。不加任何解释。
-拿不准的不改。改的地方不能改变意思。
+REWRITE_PROMPT = '''你是中文回复的审读。下面先给八种毛病的说明，再给一段 agent 写给用户的中文回复。
+只改有这八种毛病的句子，改成中文日常说法；其余一个字不动。保留所有 code、链接、引号里的原话、英文技术名词、Markdown 符号、空行和换行。不加任何解释。
+拿不准的不改。改的地方不能改变意思。改出来的词不能再犯这八种毛病：技术名词和动词保留英文，不翻成中文。
 
-只输出 JSON，不加别的字：{"text": "改后的整段原样文本", "changes": [{"from": "改前的那几个字", "to": "改后的那几个字", "mechanism": 1到7的数字}]}
+只输出 JSON，不加别的字：{"text": "改后的整段原样文本", "changes": [{"from": "改前的那几个字", "to": "改后的那几个字", "mechanism": 1到8的数字}]}
 没有要改的就输出 {"text": 原文, "changes": []}
 
-=== 七种毛病 ===
+=== 八种毛病 ===
 %s
 === 回复 ===
 %s'''
@@ -84,6 +84,8 @@ def rewrite(text, timeout=20, vocab=()):
         if not src or not dst or src not in new or (vocab and zh_vocab.used(src, vocab)) or '机制%s' % change.get('mechanism') in off:
             continue
         at = new.index(src)
+        if any(a < at and at + len(src) <= b for a, b in (m.span() for m in zh_lint.QUOTED.finditer(new))):
+            continue  # quoted example or code: the words are cited, not used
         before, after = new[at - 1:at], new[at + len(src):at + len(src) + 1]
         if dst[:1].isascii() and dst[:1].isalnum() and zh_vocab.CJK.match(before):
             dst = ' ' + dst

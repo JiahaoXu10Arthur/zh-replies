@@ -64,7 +64,7 @@ python3 zh_replies.py vocab                  # 收集用户常说的词，检查
 printf '%s\n' '等 CI 绿了再 merge。' | python3 zh_lint.py
 ```
 
-**haiku 按八种问题检查（`zh_check.py`）。** 把回复和八种问题的说明一起交给 haiku，它返回有问题的句子、问题编号和改法。词表里没有的词它也能查出来。开头表格里的数字就是它在人工标出的 26 句上的结果；只给前六种问题的定义、不给例子时，查出 19 句。调用用的是本机的 Claude Code 账号，每次 1 到 8 秒，费用不到 0.001 美元。
+**haiku 按八种问题检查（`zh_check.py`）。** 把回复和八种问题的说明一起交给 haiku，它返回有问题的句子、问题编号和改法。词表里没有的词它也能查出来。开头表格里的数字就是它在人工标出的 26 句上的结果。只给前六种问题的定义、不给例子时，查出 19 句。调用用的是本机的 Claude Code 账号，每次 1 到 8 秒，费用不到 0.001 美元。
 
 **用户自己常用的词不算问题（`zh_vocab.py`）。** 从本机的 transcript 里收集用户发过的短消息。haiku 查出来的词，只要用户在至少两条消息里用过，就不算问题。词表里的词不受影响，照常报告。
 
@@ -78,12 +78,12 @@ printf '%s\n' '等 CI 绿了再 merge。' | python3 zh_lint.py
 | 2 | 两字动词缩成一个字 | 「核过」「没接的」「写完跑」 | 核对过、没接受的、写完运行 |
 | 3 | 英文专有名词直译、给新概念造中文名 | 「烟雾测试」「退出码」「票 00」 | smoke test、exit code、ticket 00 |
 | 4 | 用颜色或比喻代替结果 | 「CI 绿了」「守卫」「没有牙」 | 通过、guard、不会拦截 |
-| 5 | 英文语序、英文介词、不必要的转折 | 「CI 结果目前不是 dev 的合并条件」，「例子只是帮助认出来，不是词表」 | 现在 merge 进 dev 不看 CI 结果；例子帮助认出机制 |
+| 5 | 英文语序、英文介词、不必要的转折 | 「CI 结果目前不是 dev 的合并条件」，「例子只是帮助认出来，不是词表」 | 现在 merge 进 dev 不看 CI 结果，例子帮助认出机制 |
 | 6 | 催答复、下命令的口气 | 「你认不认」「认了我再……」「写吧。」 | 你觉得可以吗、你看有要改的地方吗 |
 | 7 | 同一个东西换着用不同的名字 | 同一段里「链 A」「主线」「agent 工程」说的是同一条线 | 全篇只用「链 A」 |
 | 8 | 分号和破折号用得多 | 「先改 A；再改 B——然后 merge」 | 分号拆成两句，破折号改成逗号、冒号或括号 |
 
-以下情况不算问题：技术名词和动词保留英文，比如 deploy、merge、ticket；中文里没有现成说法的词，直接用英文；用户自己用过的词；引号里转述别人的原话；code 和链接。
+以下情况不算问题：技术名词和动词保留英文，比如 deploy、merge、ticket。中文里没有现成说法的词，直接用英文。用户自己用过的词、引号里转述别人的原话、code 和链接，也不算。
 
 ## 记录
 
@@ -99,7 +99,7 @@ printf '%s\n' '等 CI 绿了再 merge。' | python3 zh_lint.py
 
 | 命令 | 作用 |
 |---|---|
-| `install` | 把 `rules/core.md` 写进 `~/.claude/CLAUDE.md`；加 `--with-hooks` 同时安装三个 hook；`--personal FILE` 附加个人偏好文件 |
+| `install` | 把 `rules/core.md` 写进 `~/.claude/CLAUDE.md`。加 `--with-hooks` 同时安装三个 hook，加 `--personal FILE` 附加个人偏好文件 |
 | `status` | 显示安装位置、安装是否完整、hook 是否已经装上 |
 | `disable` | 移除规则 block 和三个 hook，不动个人偏好文件和其他 hook |
 | `vocab` | 收集用户自己常用的词 |
@@ -111,7 +111,7 @@ printf '%s\n' '等 CI 绿了再 merge。' | python3 zh_lint.py
 
 install 把规则写成一个带标记的 block，文件里的其他内容原样保留，写入之前先保存一份 `.CLAUDE.md.zh-replies-backup-*`。再运行一次 install 就是更新。如果 block 被手动改过、标记损坏，或者目标文件是 symlink，install 会拒绝写入，并提示从 backup 恢复。`--claude-dir` 可以指定其他 profile，默认读取 `CLAUDE_CONFIG_DIR`。`--agent codex` 会把同一份规则写进 `~/.codex/AGENTS.md`，但 Codex 没有 hook，只有规则会生效。
 
-个人偏好是一个 UTF-8 文本文件，里面只写表达上的偏好，例如「技术动词保留英文」。用 `install --personal FILE` 安装；改了文件之后再运行一次 `install` 就会更新；`install --without-personal` 会移除它。
+个人偏好是一个 UTF-8 文本文件，里面只写表达上的偏好，例如「技术动词保留英文」。用 `install --personal FILE` 安装。改了文件之后再运行一次 `install` 就会更新，`install --without-personal` 会移除它。
 
 </details>
 
@@ -125,8 +125,8 @@ install 把规则写成一个带标记的 block，文件里的其他内容原样
 ```
 
 - `hooks/zh_prompt_submit.py`（UserPromptSubmit）：程序自动发出的消息不附加规则。
-- `hooks/zh_display.py`（MessageDisplay）：只改完整的行，code block 和引号里的内容不改；一次显示的文字超过 300 个汉字时只做 regex 替换；haiku 超时就显示原文。设置 `ZH_DISPLAY_NO_MODEL=1` 可以只做 regex 替换。
-- `hooks/zh_lint_stop.py`（Stop）：只检查这一轮的最后一条回复；由 task-notification 这类程序消息触发的那一轮只运行 regex。设置 `ZH_LINT_NO_MODEL=1` 可以跳过 haiku。
+- `hooks/zh_display.py`（MessageDisplay）：只改完整的行，code block 和引号里的内容不改。一次显示的文字超过 300 个汉字时只做 regex 替换，haiku 超时就显示原文。设置 `ZH_DISPLAY_NO_MODEL=1` 可以只做 regex 替换。
+- `hooks/zh_lint_stop.py`（Stop）：只检查这一轮的最后一条回复。由 task-notification 这类程序消息触发的那一轮只运行 regex。设置 `ZH_LINT_NO_MODEL=1` 可以跳过 haiku。
 
 </details>
 
@@ -137,14 +137,14 @@ install 把规则写成一个带标记的 block，文件里的其他内容原样
 printf '%s\n' '请简短解释当前项目的 README。' | python3 zh_replies.py reply --check
 ```
 
-先生成完整的回复，再开一个独立的 Claude session 做检查，核对意思有没有变、原话有没有被改动，通过了才显示。生成阶段只提供 Read 这一个 tool，检查阶段不提供任何 tool。code、inline code、blockquote 和链接会逐字核对；其他需要保护的原话用 `--protect '原话'` 指定。检查没通过或者超时时，stdout 为空，exit code 非零。每个阶段默认 120 秒，可以用 `--timeout` 修改。
+先生成完整的回复，再开一个独立的 Claude session 做检查，核对意思有没有变、原话有没有被改动，通过了才显示。生成阶段只提供 Read 这一个 tool，检查阶段不提供任何 tool。code、inline code、blockquote 和链接会逐字核对，其他需要保护的原话用 `--protect '原话'` 指定。检查没通过或者超时时，stdout 为空，exit code 非零。每个阶段默认 120 秒，可以用 `--timeout` 修改。
 
 </details>
 
 ## 限制
 
 - CLAUDE.md 里的规则只能减少问题，不能完全避免。主要靠三个 hook 检查。
-- haiku 每次调用需要 5 到 8 秒，长回复显示时会有等待；一次显示的文字超过 300 个汉字时只做 regex 替换。
+- haiku 每次调用需要 5 到 8 秒，长回复显示时会有等待。一次显示的文字超过 300 个汉字时只做 regex 替换。
 - 显示时的改动只改屏幕上的文字，模型看到的还是原文，要到下一轮才知道上一条错在哪里。
 - 不检查 thinking 里的中文。
 - 词表可以自定，编辑 `zh_lint.py` 里的 `RULES` 和 `REPLACE`。

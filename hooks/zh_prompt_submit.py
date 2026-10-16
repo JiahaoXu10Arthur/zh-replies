@@ -35,7 +35,7 @@ def main():
     if not prompt or prompt.startswith(AUTOMATED):
         return 0
     mechanisms = (ROOT / 'rules' / 'mechanisms.md').read_text(encoding='utf-8')
-    context = '回复用中文时，写完逐句对照下面七种毛病，有就当场改掉再发。\n' + mechanisms
+    context = '回复用中文时，写完逐句对照下面八种毛病，有就当场改掉再发。\n' + mechanisms
     if os.environ.get('CLAUDE_PLUGIN_ROOT'):
         context = (ROOT / 'rules' / 'core.md').read_text(encoding='utf-8') + '\n' + context
     last = last_findings(payload.get('session_id'))

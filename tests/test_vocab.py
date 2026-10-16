@@ -59,6 +59,21 @@ class VocabTests(unittest.TestCase):
         self.assertEqual(text, '用兜底，dispatcher 跑。')
         self.assertEqual([c['from'] for c in changes], ['派发器'])
 
+    def test_rewrite_leaves_quoted_examples_alone(self):
+        import zh_check
+        with tempfile.TemporaryDirectory() as bindir:
+            fake = Path(bindir) / 'claude'
+            answer = json.dumps({'result': json.dumps({'text': 'x', 'changes': [{'from': '派发器', 'to': 'dispatcher', 'mechanism': 3}]}, ensure_ascii=False)}, ensure_ascii=False)
+            fake.write_text('#!/bin/sh\ncat >/dev/null\nprintf %s \'' + answer.replace("'", "'\\''") + '\'\n')
+            fake.chmod(0o755)
+            old = os.environ['PATH']
+            os.environ['PATH'] = bindir + ':' + old
+            try:
+                text, changes = zh_check.rewrite('例子是「派发器」这个词。')
+            finally:
+                os.environ['PATH'] = old
+        self.assertEqual((text, changes), ('例子是「派发器」这个词。', []))
+
 
 if __name__ == '__main__':
     unittest.main()

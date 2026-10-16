@@ -91,9 +91,14 @@ class LintTests(unittest.TestCase):
         self.assertEqual({h['tier'] for h in hits}, {'提示'})
         self.assertEqual(rules('migration 都跑完了'), ['跑完跑通'])
         self.assertEqual(rules('先改 A；再改 B——然后 merge。', '提示'), ['分号破折号', '分号破折号'])
+        self.assertEqual(rules('Anon，你说得对，这是个真实的缺口。我之前没查这个设置，这是我的疏忽。', '提示'), ['先表态再归因', '先表态再归因'])
+        self.assertEqual(rules('你说得对一半，现役名单上的 5 个人能自己连上。'), [])
         self.assertEqual(rules('例子只是帮助认出来，不是词表。', '提示'), ['不是而是句式'])
         self.assertEqual(rules('这不是 bug，而是设计如此。', '提示'), ['不是而是句式'])
         self.assertEqual(rules('这个文件不是 README。'), [])
+        self.assertEqual(rules('把这两个文件纳入 git，其他继续不入 git。结果是旧行一直没有 gameType。', '问题'), ['自造说法', '技术名词该用英文', '技术名词该用英文'])
+        self.assertEqual(sorted(rules('已经 commit，worktree 干净。并发 2 就够。', '提示')), ['并发', '词义对但用法不对'])
+        self.assertEqual(rules('旧行业的人，进 git 仓库看看。'), [])
 
     def test_allowed_usage_is_silent(self):
         for text in ['改动落地了', '跑一遍测试', '第二个球员那条存不进去', '转述：他说「必须选一个」的原因是表单收不到 Enter', '地基档案', '例子：\n```sh\necho 等 CI 绿了再 merge\n```\n']:
