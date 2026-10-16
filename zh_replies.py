@@ -197,7 +197,7 @@ def main():
             off = zh_lint.disabled_rules()
             for tier, name, _, _ in zh_lint.RULES:
                 print(f"[{tier}] {name}" + ('  （已关）' if name in off else ''))
-            for n in range(1, 8):
+            for n in range(1, 9):
                 print(f"[问题] 机制{n}" + ('  （已关）' if f'机制{n}' in off else ''))
             print('关掉规则：在', zh_lint.CONFIG, '写 {"disabled_rules": ["规则名"]}')
             return 0

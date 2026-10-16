@@ -1,4 +1,4 @@
-"""Claude Code UserPromptSubmit hook：把七种机制附在用户消息后面给模型看，让规则紧贴着生成。
+"""Claude Code UserPromptSubmit hook：把八种机制附在用户消息后面给模型看，让规则紧贴着生成。
 
 程序发的消息（task-notification 等）不附。输出 hookSpecificOutput.additionalContext。
 作为 plugin 运行时（有 CLAUDE_PLUGIN_ROOT 环境变量）没有 CLAUDE.md 里的规则 block，所以把 rules/core.md 也一起附上。

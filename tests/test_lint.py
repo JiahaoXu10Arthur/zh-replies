@@ -90,6 +90,7 @@ class LintTests(unittest.TestCase):
         hits = zh_lint.lint('migration 都跑完了，上面第三条说的那个索引进行验证。')
         self.assertEqual({h['tier'] for h in hits}, {'提示'})
         self.assertEqual(rules('migration 都跑完了'), ['跑完跑通'])
+        self.assertEqual(rules('先改 A；再改 B——然后 merge。', '提示'), ['分号破折号', '分号破折号'])
         self.assertEqual(rules('例子只是帮助认出来，不是词表。', '提示'), ['不是而是句式'])
         self.assertEqual(rules('这不是 bug，而是设计如此。', '提示'), ['不是而是句式'])
         self.assertEqual(rules('这个文件不是 README。'), [])

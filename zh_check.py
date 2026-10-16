@@ -14,11 +14,11 @@ sys.path.insert(0, str(ROOT))
 import zh_lint
 import zh_vocab
 MECHANISMS = ROOT / 'rules' / 'mechanisms.md'
-PROMPT = '''你是中文回复的审读。下面先给七种毛病的说明，再给一段 agent 写给用户的中文回复。
+PROMPT = '''你是中文回复的审读。下面先给八种毛病的说明，再给一段 agent 写给用户的中文回复。
 逐句读回复，找出属于这七种毛病的句子。按机制判断，说明里的例子只是帮助认出来，没列出的写法同样要报。
 引号里转述别人的原话、code、链接、技术英文名词不报；引号里 agent 自己起的名字或自己的说法要报。拿不准的不放进 hits，另外列在 unsure 里，格式一样。
 
-只输出 JSON，不加别的字：{"hits": [{"sentence": "原句", "mechanism": 1到7的数字, "match": "有问题的那几个字", "fix": "该怎么写"}], "unsure": [同样格式]}
+只输出 JSON，不加别的字：{"hits": [{"sentence": "原句", "mechanism": 1到8的数字, "match": "有问题的那几个字", "fix": "该怎么写"}], "unsure": [同样格式]}
 没有问题就输出 {"hits": [], "unsure": []}
 
 === 七种毛病 ===
